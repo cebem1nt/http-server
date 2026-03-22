@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <signal.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <netinet/in.h>
@@ -34,12 +35,12 @@ char* readfile(const char* fname, size_t* out_size)
     if ((fsize = lseek(fd, 0, SEEK_END)) == -1) {
         perror("open");
         goto _exit;
-    };
+    }
 
     if (lseek(fd, 0, SEEK_SET) == -1) {
         perror("open");
         goto _exit;
-    }; 
+    }
 
     if ((out = (char*) malloc(fsize + 1)) == NULL) {
         goto _exit;
@@ -54,7 +55,7 @@ char* readfile(const char* fname, size_t* out_size)
     if (out_size)
         *out_size = fsize;
 
-    out[fsize + 1] = '\0';
+    out[fsize] = '\0';
 _exit:
     close(fd);
     return out;
@@ -66,13 +67,13 @@ char* get_client_ip(struct sockaddr* client_addr)
     return inet_ntoa(client_addr_in->sin_addr);
 }
 
-void handle_clinent(int client_fd) 
+void handle_client(int client_fd) 
 {
     char    buf[BUFSIZ];
     int     n;
 
     // TODO: this aint good
-    // Asume that our buffer is big enough to fit any request (at once)
+    // Assume that our buffer is big enough to fit any request (at once)
     if ((n = recv(client_fd, buf, BUFSIZ, 0)) == -1)
         perror_exit("recv");
 
@@ -146,6 +147,8 @@ int main()
     if (listen(server_fd, BACKLOG) == -1)
         perror_exit("listen");
 
+    // Ignore exit codes of the children
+    signal(SIGCHLD, SIG_IGN);
     printf("Listening on: %i\n", PORT);
  
     // Accept any client, assign comunication stream into client fd
@@ -153,11 +156,17 @@ int main()
         if (client_fd == -1)
             perror_exit("accept");
 
-        char* client_ip = get_client_ip(&client_addr);
-        printf("New client: %s\n\n", client_ip);
+        // char* client_ip = get_client_ip(&client_addr);
+        // printf("New client: %s\n\n", client_ip);
         
-        // TODO I bet we should handle clients asyncronously
-        handle_clinent(client_fd);
+        if (fork() == 0) {  // Fork and make child handle the client
+            close(server_fd);
+            handle_client(client_fd);
+            close(client_fd);
+            _exit(0);
+        }
+
+        close(client_fd);
     }
 
     return 0;
