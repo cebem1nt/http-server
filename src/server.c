@@ -156,8 +156,8 @@ int main()
         if (client_fd == -1)
             perror_exit("accept");
 
-        // char* client_ip = get_client_ip(&client_addr);
-        // printf("New client: %s\n\n", client_ip);
+        char* client_ip = get_client_ip(&client_addr);
+        printf("New client: %s\n\n", client_ip);
         
         if (fork() == 0) {  // Fork and make child handle the client
             close(server_fd);
