@@ -21,7 +21,8 @@ int server_fd = socket(AF_INET, SOCK_STREAM, 0);
 ...
 ```
 
-> `man 2 socket`
+> From `man 2 socket`:
+> 
 > The `socket` syscall creates an endpoint for a communication
 
 Allrigth, what does that mean? For the linux kernel, sockets are communicational endpoints, the file descriptor `socket()` returns is purely internal, it is needed for the kernel.
@@ -45,9 +46,12 @@ server_addr.sin_port = htons(8888);
 
 Next step is to create a structure with additional info: the port our server will use, the address on which we will receive connections and the protocol hamily we use.
 
-> `hton`, `ntoh` functions are used to convert bytes order. 
+> `hton`, `ntoh` functions are used to convert bytes order.
+> 
 >   `h to n` -> host order to network order
+>
 >   `n to h` -> network order to host order
+> 
 > additional s or l are used to identify input type: _short_ or _long_
 
 - `INADDR_ANY`
@@ -62,7 +66,8 @@ bind(server_fd, (struct sockaddr*)&server_addr, sizeof(server_addr));
 ...
 ```
 
-> `man 2 bind`
+> From `man 2 bind`:
+> 
 > bind() assigns the address specified by addr to the socket referred
 > to by the file descriptor sockfd. addrlen specifies the size, in bytes, 
 > of the address structure pointed to by addr. 
